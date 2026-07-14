@@ -1,12 +1,5 @@
 import streamlit as st
 
-st.set_page_config(
-    page_title="SentinelAI",
-    page_icon=":shield:",
-    layout="wide",
-    initial_sidebar_state="expanded",
-)
-
 
 def load_css():
     st.markdown(
@@ -56,22 +49,79 @@ def load_css():
 
         .bar-track { height: 6px; background: #F3F4F6; border-radius: 3px; }
         .bar-fill { height: 100%; border-radius: 3px; }
+
+        .stButton button,
+        button[data-testid="stButton"] {
+            color: #FFFFFF !important;
+            background-color: #0F172A !important;
+            border-color: #0F172A !important;
+            box-shadow: none !important;
+        }
+
+        .stButton button:hover,
+        button[data-testid="stButton"]:hover {
+            color: #FFFFFF !important;
+            background-color: #1D4ED8 !important;
+            border-color: #1D4ED8 !important;
+        }
+
+        .stButton button:focus-visible,
+        button[data-testid="stButton"]:focus-visible {
+            color: #FFFFFF !important;
+            outline: 2px solid #93C5FD !important;
+            outline-offset: 2px !important;
+        }
+
+        .stButton button:active,
+        button[data-testid="stButton"]:active {
+            color: #FFFFFF !important;
+            background-color: #1E40AF !important;
+            border-color: #1E40AF !important;
+        }
+
+        .stButton button:disabled,
+        button[data-testid="stButton"]:disabled,
+        button:disabled {
+            color: #E2E8F0 !important;
+            background-color: #475569 !important;
+            border-color: #475569 !important;
+            opacity: 1 !important;
+        }
+        .stButton button *,
+        button[data-testid="stBaseButton-secondary"] *,
+        button[data-testid="stBaseButton-primary"] * {
+            color: #FFFFFF !important;
+        }
         </style>
         """,
         unsafe_allow_html=True,
     )
 
 
-load_css()
+def main():
+    st.set_page_config(
+        page_title="SentinelAI Home",
+        page_icon="🛡️",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
 
-st.markdown(
-    """
-    <h2 style="margin-bottom:0">SentinelAI</h2>
-    <p style="color:#6B7280;font-size:13px;margin-top:4px">
-    Real-time overview of privileged account activities and security alerts
-    </p>
-    """,
-    unsafe_allow_html=True,
-)
+    load_css()
 
-st.info("Use the sidebar to navigate to Overview, Live Alerts, Attack Simulation and Evidence Integrity.")
+    st.markdown(
+        """
+        <h2 style="margin-bottom:0">SentinelAI</h2>
+        <p style="color:#6B7280;font-size:13px;margin-top:4px">
+        Real-time overview of privileged account activities and security alerts
+        </p>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    st.info(
+        "Use the sidebar to explore the Overview, review Live Alerts and run Attack Simulations with cryptographic evidence verification."
+    )
+
+
+if __name__ == "__main__":
+    main()
