@@ -77,6 +77,8 @@ except Exception as error:
     st.code(f"{type(error).__name__}: {error}")
     st.stop()
 
+alerts_df["source"] = "Observed"
+
 
 # ------------------------------------------------------------------
 # Add incidents created from Attack Simulation, when available
@@ -85,6 +87,8 @@ simulated_alerts = st.session_state.get("simulated_alerts", [])
 
 if simulated_alerts:
     simulated_df = pd.DataFrame(simulated_alerts)
+    simulated_df["source"] = "Simulated"
+    simulated_df["is_simulated"] = True
 
     if "timestamp" in simulated_df.columns:
         simulated_df["timestamp"] = pd.to_datetime(
@@ -133,6 +137,26 @@ st.caption(
     "Review scored privileged-user events, their explanations and "
     "recommended security responses."
 )
+
+if simulated_alerts:
+    simulation_message, simulation_control = st.columns([4, 1])
+
+    with simulation_message:
+        st.info(
+            f"{len(simulated_alerts)} simulated alert(s) are active. "
+            "They are labelled Simulated in the queue."
+        )
+
+    with simulation_control:
+        if st.button(
+            "End simulated attacks",
+            use_container_width=True,
+        ):
+            st.session_state.simulated_alerts = []
+            st.session_state.sim_result = None
+            st.session_state.sim_name = None
+            st.session_state.sim_evidence = None
+            st.rerun()
 
 
 # ------------------------------------------------------------------
@@ -236,7 +260,7 @@ render_html(
 )
 
 header_columns = st.columns(
-    [1.25, 1.15, 1.15, 1.45, 1.45, 0.7, 0.8]
+    [1.15, 1.05, 1.05, 1.3, 1.3, 0.65, 0.75, 0.8]
 )
 
 headings = [
@@ -247,6 +271,7 @@ headings = [
     "Resource",
     "Score",
     "Tier",
+    "Source",
 ]
 
 for column, heading in zip(header_columns, headings):
@@ -306,6 +331,8 @@ else:
             alert.get("risk_tier", "Medium")
         )
 
+        source = str(alert.get("source", "Observed"))
+
         recommended_action = str(
             alert.get(
                 "recommended_action",
@@ -316,7 +343,7 @@ else:
         reasons_text = format_reasons(alert)
 
         row_columns = st.columns(
-            [1.25, 1.15, 1.15, 1.45, 1.45, 0.7, 0.8]
+            [1.15, 1.05, 1.05, 1.3, 1.3, 0.65, 0.75, 0.8]
         )
 
         row_values = [
@@ -366,6 +393,24 @@ else:
                 """
             )
 
+        with row_columns[7]:
+            if source == "Simulated":
+                render_html(
+                    """
+                    <span class="badge badge-medium">
+                        Simulated
+                    </span>
+                    """
+                )
+            else:
+                render_html(
+                    """
+                    <span style="font-size:12px;color:#6B7280;">
+                        Observed
+                    </span>
+                    """
+                )
+
         with st.expander(
             f"Alert details — {employee_name} · {time_text}",
             expanded=False,
@@ -381,6 +426,11 @@ else:
                 st.write(f"**Resource:** {resource_text}")
                 st.write(f"**Final risk score:** {final_score:.1f}")
                 st.write(f"**Risk tier:** {risk_tier}")
+                st.write(f"**Source:** {source}")
+
+                incident_id = alert.get("incident_id")
+                if incident_id is not None and not pd.isna(incident_id):
+                    st.write(f"**Incident ID:** {incident_id}")
 
             with detail_col2:
                 st.markdown("#### Analyst explanation")
@@ -390,6 +440,27 @@ else:
                     f"**Recommended action:** "
                     f"{recommended_action}"
                 )
+
+                if source == "Simulated":
+                    original_verified = alert.get(
+                        "evidence_original_verified"
+                    )
+                    tampered_verified = alert.get(
+                        "evidence_tampered_verified"
+                    )
+
+                    if original_verified and tampered_verified is False:
+                        integrity_text = (
+                            "Original verified; tampered copy rejected"
+                        )
+                    elif original_verified and tampered_verified is None:
+                        integrity_text = (
+                            "Original verified; tamper test not run"
+                        )
+                    else:
+                        integrity_text = "Evidence verification needs review"
+
+                    st.write(f"**Evidence integrity:** {integrity_text}")
 
             rule_score = alert.get("rule_score")
             ml_score = alert.get("ml_score")
